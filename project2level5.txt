@@ -1,0 +1,131 @@
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+#include <queue>
+#include <string>
+using namespace std;
+
+// ------------------ Patient Class ------------------
+class Patient {
+public:
+    int id;
+    string name;
+    string symptoms;
+    Patient(int i, string n, string s) : id(i), name(n), symptoms(s) {}
+    void display() {
+        cout << "Patient ID: " << id << ", Name: " << name << ", Symptoms: " << symptoms << endl;
+    }
+};
+
+// ------------------ HashTable for PatientID ------------------
+unordered_map<int, Patient*> patientTable;
+
+void addPatient(int id, string name, string symptoms) {
+    patientTable[id] = new Patient(id, name, symptoms);
+}
+
+// ------------------ Boyer-Moore Symptom Search ------------------
+bool boyerMooreSearch(const string& text, const string& pattern) {
+    int n = text.size();
+    int m = pattern.size();
+    if (m == 0) return true;
+
+    vector<int> badChar(256, -1);
+    for (int i = 0; i < m; i++) badChar[(int)pattern[i]] = i;
+
+    int shift = 0;
+    while (shift <= (n - m)) {
+        int j = m - 1;
+        while (j >= 0 && pattern[j] == text[shift + j]) j--;
+        if (j < 0) return true;
+        else shift += max(1, j - badChar[(int)text[shift + j]]);
+    }
+    return false;
+}
+
+void searchSymptom(string symptom) {
+    cout << "Patients with symptom '" << symptom << "':\n";
+    for (auto& entry : patientTable) {
+        if (boyerMooreSearch(entry.second->symptoms, symptom)) {
+            entry.second->display();
+        }
+    }
+}
+
+// ------------------ Doctor-Patient Graph (BFS) ------------------
+unordered_map<string, vector<string>> doctorPatientGraph;
+
+void addRelation(string doctor, string patient) {
+    doctorPatientGraph[doctor].push_back(patient);
+}
+
+void recommendPatients(string doctor) {
+    cout << "Doctor-Patient Recommendations (BFS) for " << doctor << ":\n";
+    queue<string> q;
+    unordered_map<string, bool> visited;
+
+    q.push(doctor);
+    visited[doctor] = true;
+
+    while (!q.empty()) {
+        string node = q.front(); q.pop();
+        cout << node << " ";
+        for (auto& neighbor : doctorPatientGraph[node]) {
+            if (!visited[neighbor]) {
+                visited[neighbor] = true;
+                q.push(neighbor);
+            }
+        }
+    }
+    cout << endl;
+}
+
+// ------------------ Menu ------------------
+int main() {
+    int choice;
+    do {
+        cout << "\n--- Hospital Management System (Level 5) ---\n";
+        cout << "1. Add Patient\n";
+        cout << "2. Search Patient by ID\n";
+        cout << "3. Symptom Search\n";
+        cout << "4. Add Doctor-Patient Relation\n";
+        cout << "5. Doctor Recommendations (BFS)\n";
+        cout << "0. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            int id; string name, symptoms;
+            cout << "Enter Patient ID: "; cin >> id;
+            cout << "Enter Name: "; cin >> name;
+            cout << "Enter Symptoms: "; cin.ignore(); getline(cin, symptoms);
+            addPatient(id, name, symptoms);
+        }
+        else if (choice == 2) {
+            int id;
+            cout << "Enter Patient ID: "; cin >> id;
+            if (patientTable.find(id) != patientTable.end())
+                patientTable[id]->display();
+            else
+                cout << "Patient not found.\n";
+        }
+        else if (choice == 3) {
+            string symptom;
+            cout << "Enter symptom to search: "; cin >> symptom;
+            searchSymptom(symptom);
+        }
+        else if (choice == 4) {
+            string doctor, patient;
+            cout << "Enter Doctor Name: "; cin >> doctor;
+            cout << "Enter Patient Name: "; cin >> patient;
+            addRelation(doctor, patient);
+        }
+        else if (choice == 5) {
+            string doctor;
+            cout << "Enter Doctor Name: "; cin >> doctor;
+            recommendPatients(doctor);
+        }
+    } while (choice != 0);
+
+    return 0;
+}

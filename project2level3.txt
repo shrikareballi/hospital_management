@@ -1,0 +1,58 @@
+#include <iostream>
+#include <list>
+#include <stack>
+#include <queue>
+using namespace std;
+
+// Reuse Level 2 classes
+
+struct TreatmentNode {
+    string treatment;
+    TreatmentNode* next;
+    TreatmentNode* prev;
+};
+
+class TreatmentHistory {
+    TreatmentNode* head;
+public:
+    TreatmentHistory():head(nullptr){}
+    void addTreatment(string t) {
+        TreatmentNode* node=new TreatmentNode{t,nullptr,nullptr};
+        if(!head) { head=node; head->next=head->prev=head; }
+        else {
+            node->next=head;
+            node->prev=head->prev;
+            head->prev->next=node;
+            head->prev=node;
+        }
+    }
+    void display() {
+        if(!head) return;
+        TreatmentNode* temp=head;
+        do {
+            cout<<temp->treatment<<" -> ";
+            temp=temp->next;
+        } while(temp!=head);
+        cout<<"(circular)\n";
+    }
+};
+
+stack<string> emergencyStack;
+queue<string> waitingQueue;
+
+int main() {
+    TreatmentHistory th;
+    int choice;
+    do {
+        cout<<"\n1.Add Treatment\n2.Show History\n3.Admit Patient\n4.Discharge Patient\n5.Emergency Push\n6.Emergency Undo\n7.Waiting Add\n8.Waiting Serve\n0.Exit\nChoice: ";
+        cin>>choice;
+        if(choice==1){ string t; cin>>t; th.addTreatment(t); }
+        else if(choice==2) th.display();
+        else if(choice==3){ string p; cin>>p; waitingQueue.push(p); }
+        else if(choice==4){ if(!waitingQueue.empty()){ cout<<"Discharged: "<<waitingQueue.front()<<endl; waitingQueue.pop(); } }
+        else if(choice==5){ string e; cin>>e; emergencyStack.push(e); }
+        else if(choice==6){ if(!emergencyStack.empty()){ cout<<"Undo triage: "<<emergencyStack.top()<<endl; emergencyStack.pop(); } }
+        else if(choice==7){ string p; cin>>p; waitingQueue.push(p); }
+        else if(choice==8){ if(!waitingQueue.empty()){ cout<<"Served: "<<waitingQueue.front()<<endl; waitingQueue.pop(); } }
+    } while(choice!=0);
+}

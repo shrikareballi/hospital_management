@@ -1,0 +1,83 @@
+#include <iostream>
+#include <list>
+#include <string>
+using namespace std;
+
+class Person {
+protected:
+    string name;
+    int age;
+public:
+    Person(string n, int a) : name(n), age(a) {}
+    virtual void display() = 0; // abstract
+    int getAge() const { return age; }
+    string getName() const { return name; }
+};
+
+class Patient : public Person {
+public:
+    Patient(string n, int a) : Person(n,a) {}
+    void display() override {
+        cout << "Patient: " << name << ", Age: " << age << endl;
+    }
+};
+
+class Doctor : public Person {
+    string specialty;
+public:
+    Doctor(string n, int a, string s) : Person(n,a), specialty(s) {}
+    void display() override {
+        cout << "Doctor: " << name << ", Specialty: " << specialty << endl;
+    }
+    string getSpecialty() const { return specialty; }
+};
+
+class Nurse : public Person {
+public:
+    Nurse(string n, int a) : Person(n,a) {}
+    void display() override {
+        cout << "Nurse: " << name << endl;
+    }
+};
+
+class Hospital {
+    list<Person*> people;
+    friend void staffPatientRatio(Hospital&);
+public:
+    void addPerson(Person* p) { people.push_back(p); }
+    void displayStaff() {
+        for(auto p: people) p->display();
+    }
+    list<Person*>& getPeople() { return people; }
+};
+
+void staffPatientRatio(Hospital& h) {
+    int patients=0, staff=0;
+    for(auto p: h.people) {
+        if(dynamic_cast<Patient*>(p)) patients++;
+        else staff++;
+    }
+    cout << "Staff-Patient Ratio: " << staff << ":" << patients << endl;
+}
+
+int main() {
+    Hospital h;
+    int choice;
+    do {
+        cout << "\n1.Register Patient\n2.Register Doctor\n3.Register Nurse\n4.Display Staff\n5.Ratio\n0.Exit\nChoice: ";
+        cin >> choice;
+        if(choice==1) {
+            string n; int a; cout<<"Name Age: "; cin>>n>>a;
+            h.addPerson(new Patient(n,a));
+        } else if(choice==2) {
+            string n,s; int a; cout<<"Name Age Specialty: "; cin>>n>>a>>s;
+            h.addPerson(new Doctor(n,a,s));
+        } else if(choice==3) {
+            string n; int a; cout<<"Name Age: "; cin>>n>>a;
+            h.addPerson(new Nurse(n,a));
+        } else if(choice==4) h.displayStaff();
+        else if(choice==5) staffPatientRatio(h);
+    } while(choice!=0);
+}
+ 
+     

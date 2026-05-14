@@ -1,0 +1,79 @@
+// Extend Level 1 with sorting
+// Example: Selection Sort Patients by Age, Insertion Sort Doctors by Specialty
+// Merge Sort Appointments (define Appointment class with time)
+
+#include <iostream>
+#include <list>
+#include <string>
+#include <algorithm>
+using namespace std;
+
+// (Reuse Person, Patient, Doctor, Nurse, Hospital from Level 1)
+
+class Appointment {
+    string patientName;
+    int time; // simple integer for time
+public:
+    Appointment(string p, int t):patientName(p),time(t){}
+    int getTime() const { return time; }
+    void display() { cout<<"Appointment: "<<patientName<<" at "<<time<<endl; }
+};
+
+// Sorting functions
+void sortPatientsByAge(list<Person*>& people) {
+    people.sort([](Person* a, Person* b){
+        Patient* pa=dynamic_cast<Patient*>(a);
+        Patient* pb=dynamic_cast<Patient*>(b);
+        if(pa && pb) return pa->getAge()<pb->getAge();
+        return false;
+    });
+}
+
+void sortDoctorsBySpecialty(list<Person*>& people) {
+    people.sort([](Person* a, Person* b){
+        Doctor* da=dynamic_cast<Doctor*>(a);
+        Doctor* db=dynamic_cast<Doctor*>(b);
+        if(da && db) return da->getSpecialty()<db->getSpecialty();
+        return false;
+    });
+}
+
+void mergeSortAppointments(vector<Appointment>& arr) {
+    if(arr.size()<=1) return;
+    int mid=arr.size()/2;
+    vector<Appointment> left(arr.begin(),arr.begin()+mid);
+    vector<Appointment> right(arr.begin()+mid,arr.end());
+    mergeSortAppointments(left);
+    mergeSortAppointments(right);
+    arr.clear();
+    auto i=left.begin(), j=right.begin();
+    while(i!=left.end() && j!=right.end()) {
+        if(i->getTime()<j->getTime()) arr.push_back(*i++);
+        else arr.push_back(*j++);
+    }
+    while(i!=left.end()) arr.push_back(*i++);
+    while(j!=right.end()) arr.push_back(*j++);
+}
+
+int main() {
+    Hospital h;
+    vector<Appointment> appointments;
+    int choice;
+    do {
+        cout << "\n1.Register Patient\n2.Register Doctor\n3.Display Staff\n4.Ratio\n5.Sort Patients\n6.Sort Doctors\n7.Add Appointment\n8.Sort Appointments\n9.Display Appointments\n0.Exit\nChoice: ";
+        cin >> choice;
+        if(choice==1) {
+            string n; int a; cout<<"Name Age: "; cin>>n>>a;
+            h.addPerson(new Patient(n,a));
+        } else if(choice==2) {
+            string n,s; int a; cout<<"Name Age Specialty: "; cin>>n>>a>>s;
+            h.addPerson(new Doctor(n,a,s));
+        } else if(choice==3) h.displayStaff();
+        else if(choice==4) staffPatientRatio(h);
+        else if(choice==5) { sortPatientsByAge(h.getPeople()); cout<<"Patients sorted.\n"; }
+        else if(choice==6) { sortDoctorsBySpecialty(h.getPeople()); cout<<"Doctors sorted.\n"; }
+        else if(choice==7) { string p; int t; cout<<"PatientName Time: "; cin>>p>>t; appointments.push_back(Appointment(p,t)); }
+        else if(choice==8) { mergeSortAppointments(appointments); cout<<"Appointments sorted.\n"; }
+        else if(choice==9) { for(auto &a:appointments) a.display(); }
+    } while(choice!=0);
+}

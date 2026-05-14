@@ -1,0 +1,122 @@
+#include <iostream>
+#include <queue>
+#include <string>
+using namespace std;
+
+class Doctor {
+public:
+    string name, specialty;
+    Doctor(string n, string s) : name(n), specialty(s) {}
+    void display() { cout << "Doctor: " << name << " (" << specialty << ")\n"; }
+};
+
+// ------------------ BST for Doctor Specialties ------------------
+struct DocNode {
+    Doctor* doc;
+    DocNode* left, *right;
+    DocNode(Doctor* d) : doc(d), left(NULL), right(NULL) {}
+};
+
+class SpecialtyTree {
+    DocNode* root;
+
+    DocNode* insert(DocNode* node, Doctor* doc) {
+        if (!node) return new DocNode(doc);
+        if (doc->specialty < node->doc->specialty)
+            node->left = insert(node->left, doc);
+        else
+            node->right = insert(node->right, doc);
+        return node;
+    }
+
+    void inorder(DocNode* node) {
+        if (!node) return;
+        inorder(node->left);
+        node->doc->display();
+        inorder(node->right);
+    }
+
+    Doctor* search(DocNode* node, string spec) {
+        if (!node) return NULL;
+        if (node->doc->specialty == spec) return node->doc;
+        if (spec < node->doc->specialty) return search(node->left, spec);
+        else return search(node->right, spec);
+    }
+
+public:
+    SpecialtyTree() : root(NULL) {}
+    void addDoctor(Doctor* doc) { root = insert(root, doc); }
+    void displayAll() { inorder(root); }
+    Doctor* findSpecialist(string spec) { return search(root, spec); }
+};
+
+// ------------------ Min-Heap for Critical Patients ------------------
+struct Patient {
+    string name;
+    int severity; // lower value = more critical
+    Patient(string n, int s) : name(n), severity(s) {}
+};
+
+struct Compare {
+    bool operator()(Patient* a, Patient* b) {
+        return a->severity > b->severity; // min-heap
+    }
+};
+
+class CriticalQueue {
+    priority_queue<Patient*, vector<Patient*>, Compare> pq;
+public:
+    void addPatient(Patient* p) { pq.push(p); }
+    void listCritical() {
+        cout << "Critical Patients (most urgent first):\n";
+        priority_queue<Patient*, vector<Patient*>, Compare> temp = pq;
+        while (!temp.empty()) {
+            Patient* p = temp.top(); temp.pop();
+            cout << p->name << " (Severity: " << p->severity << ")\n";
+        }
+    }
+};
+
+// ------------------ Menu ------------------
+int main() {
+    SpecialtyTree tree;
+    CriticalQueue cq;
+
+    int choice;
+    do {
+        cout << "\n--- Hospital Management System (Level 4) ---\n";
+        cout << "1. Add Doctor\n";
+        cout << "2. Display All Doctors\n";
+        cout << "3. Find Specialist\n";
+        cout << "4. Add Critical Patient\n";
+        cout << "5. List Critical Patients\n";
+        cout << "0. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;if (choice == 1) {
+            string name, spec;
+            cout << "Enter doctor name: "; cin >> name;
+            cout << "Enter specialty: "; cin >> spec;
+            tree.addDoctor(new Doctor(name, spec));
+        }
+        else if (choice == 2) {
+            tree.displayAll();
+        }
+        else if (choice == 3) {string spec;
+            cout << "Enter specialty to search: "; cin >> spec;
+            Doctor* d = tree.findSpecialist(spec);
+            if (d) d->display();
+            else cout << "Specialist not found.\n";
+        }
+        else if (choice == 4) {
+            string name; int sev;
+            cout << "Enter patient name: "; cin >> name;
+            cout << "Enter severity (lower = more critical): "; cin >> sev;
+            cq.addPatient(new Patient(name, sev));
+        }
+        else if (choice == 5) {
+            cq.listCritical();
+        }
+    } while (choice != 0);
+
+    return 0;
+}
